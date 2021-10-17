@@ -25,11 +25,8 @@ class PostsURLTests(TestCase):
         )
 
     def setUp(self):
-        # Создаем неавторизованный клиент
         self.guest_client = Client()
-        # Создаем второй клиент
         self.authorized_client = Client()
-        # Авторизуем пользователя
         self.authorized_client.force_login(self.authorized_user)
 
     def test_posts_urls_exists_at_desired_location(self):
@@ -44,6 +41,7 @@ class PostsURLTests(TestCase):
             '/create/': HTTPStatus.FOUND,
             f'/posts/{self.post.id}/edit/': HTTPStatus.FOUND,
             '/unexisting_page/': HTTPStatus.NOT_FOUND,
+            '/follow/': HTTPStatus.FOUND,
         }
         for adress, status in urls_non_authorized_response_status.items():
             with self.subTest(adress=adress):
@@ -57,6 +55,7 @@ class PostsURLTests(TestCase):
         urls_authorized_response_status = {
             '/create/': HTTPStatus.OK,
             f'/posts/{self.post.id}/edit/': HTTPStatus.OK,
+            '/follow/': HTTPStatus.OK,
         }
         for adress, status in urls_authorized_response_status.items():
             with self.subTest(adress=adress):
@@ -72,6 +71,7 @@ class PostsURLTests(TestCase):
             f'/posts/{self.post.id}/': 'posts/post_detail.html',
             '/create/': 'posts/create_post.html',
             f'/posts/{self.post.id}/edit/': 'posts/create_post.html',
+            '/follow/': 'posts/follow.html',
         }
         for adress, template in url_names_templates.items():
             with self.subTest(adress=adress):

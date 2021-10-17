@@ -156,8 +156,9 @@ class CommentCreateFormTests(TestCase):
             data=self.form_data,
             follow=True
         )
+        redirect = reverse('users:login')
         self.assertEqual(Comment.objects.count(), comments_count)
         self.assertRedirects(
             response,
-            f"{reverse('users:login')}?next={self.reverse_link}"
+            f"{redirect}?next={self.reverse_link}"
         )

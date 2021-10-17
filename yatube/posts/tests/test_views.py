@@ -63,11 +63,11 @@ class PostsPagesTests(TestCase):
         post_text_0 = first_object.text
         post_author_0 = first_object.author
         post_group_0 = first_object.group
-        post_pub_date_0 = first_object.pub_date
+        post_pub_date_0 = first_object.created
         self.assertEqual(post_text_0, self.post.text)
         self.assertEqual(post_author_0, self.post.author)
         self.assertEqual(post_group_0, self.post.group)
-        self.assertEqual(post_pub_date_0, self.post.pub_date)
+        self.assertEqual(post_pub_date_0, self.post.created)
 
     def test_posts_group_list_show_correct_context(self):
         """Шаблон group_list сформирован с правильным контекстом."""
@@ -78,11 +78,11 @@ class PostsPagesTests(TestCase):
         post_text_0 = first_object.text
         post_author_0 = first_object.author
         post_group_0 = first_object.group
-        post_pub_date_0 = first_object.pub_date
+        post_pub_date_0 = first_object.created
         self.assertEqual(post_text_0, self.post.text)
         self.assertEqual(post_author_0, self.post.author)
         self.assertEqual(post_group_0, self.post.group)
-        self.assertEqual(post_pub_date_0, self.post.pub_date)
+        self.assertEqual(post_pub_date_0, self.post.created)
 
     def test_posts_profile_show_correct_content(self):
         """Шаблон profile сформирован с правильным контекстом."""
@@ -92,11 +92,11 @@ class PostsPagesTests(TestCase):
         test_author = response.context['author']
         first_object = response.context['page_obj'][0]
         post_text_0 = first_object.text
-        post_pub_date_0 = first_object.pub_date
+        post_pub_date_0 = first_object.created
         count_posts_test = response.context['count_posts']
         self.assertEqual(post_text_0, self.post.text)
         self.assertEqual(test_author, self.authorized_user)
-        self.assertEqual(post_pub_date_0, self.post.pub_date)
+        self.assertEqual(post_pub_date_0, self.post.created)
         self.assertEqual(count_posts_test,
                          self.authorized_user.posts_by_user.all().count())
 
@@ -109,12 +109,12 @@ class PostsPagesTests(TestCase):
         post_text = test_post.text
         post_author = test_post.author
         post_group = test_post.group
-        post_pub_date = test_post.pub_date
+        post_pub_date = test_post.created
         count_posts_test = response.context['count_posts']
         self.assertEqual(post_text, self.post.text)
         self.assertEqual(post_author, self.post.author)
         self.assertEqual(post_group, self.post.group)
-        self.assertEqual(post_pub_date, self.post.pub_date)
+        self.assertEqual(post_pub_date, self.post.created)
         self.assertEqual(count_posts_test,
                          self.post.author.posts_by_user.all().count())
 
@@ -265,26 +265,21 @@ class FollowersTests(TestCase):
             slug='test-slug',
             description='Тестовое описание группы'
         )
-        cls.post = Post.objects.create(
-            text='Тестовый пост для проверки подписок',
-            author=cls.user_1,
-            group=cls.group,
-        )
 
     def setUp(self):
         self.unauthorized_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user_2)
-        self.authorized_client.get(
-            reverse(
-                'posts:profile_follow',
-                kwargs={'username': self.user_1.username})
-        )
 
     def test_authorized_user_can_follow_authors(self):
         """Авторизованный пользователь может
         подписываться на других пользователей.
         """
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.user_1.username})
+        )
         self.assertTrue(
             Follow.objects.filter(
                 user=self.user_2, author=self.user_1).exists()
@@ -303,21 +298,57 @@ class FollowersTests(TestCase):
         followers_count_check = Follow.objects.all().count()
         self.assertEqual(followers_count, followers_count_check)
 
+    def test_user_can_unfollow_authors(self):
+        """Пользователь может отписаться от автора."""
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.user_1.username})
+        )
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.user_2, author=self.user_1).exists()
+        )
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_unfollow',
+                kwargs={'username': self.user_1.username})
+        )
+        self.assertFalse(
+            Follow.objects.filter(
+                user=self.user_2, author=self.user_1).exists()
+        )
+
     def test_post_on_follow_page_of_follower(self):
         """Новая запись пользователя появляется
         в ленте тех, кто на него подписан.
         """
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_follow',
+                kwargs={'username': self.user_1.username})
+        )
+        post = Post.objects.create(
+            text='Тестовый пост для проверки подписок',
+            author=self.user_1,
+            group=self.group,
+        )
         response = self.authorized_client.get(
             reverse('posts:follow_index'))
         posts_list = response.context['page_obj']
-        self.assertIn(self.post, posts_list)
+        self.assertIn(post, posts_list)
 
     def test_no_post_on_follow_page_of_non_follower(self):
         """Новая запись пользователя не появляется
         в ленте тех, кто на него не подписан.
         """
         self.authorized_client.force_login(self.user_3)
+        post = Post.objects.create(
+            text='Тестовый пост для проверки подписок',
+            author=self.user_1,
+            group=self.group,
+        )
         response = self.authorized_client.get(
             reverse('posts:follow_index'))
         posts_list = response.context['page_obj']
-        self.assertNotIn(self.post, posts_list)
+        self.assertNotIn(post, posts_list)

@@ -1,3 +1,5 @@
+from core.models import CreatedModel
+
 from django.contrib.auth import get_user_model
 from django.db import models
 
@@ -13,9 +15,8 @@ class Group(models.Model):
         return self.title
 
 
-class Post(models.Model):
+class Post(CreatedModel):
     text = models.TextField(verbose_name='текст')
-    pub_date = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -40,14 +41,13 @@ class Post(models.Model):
     # в которую будут загружаться пользовательские файлы.
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ['-created']
 
     def __str__(self):
         return self.text[:15]
 
 
-class Comment(models.Model):
-    # post — ссылка на пост, к которому оставлен комментарий
+class Comment(CreatedModel):
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
@@ -61,7 +61,6 @@ class Comment(models.Model):
         verbose_name='комментарии автора'
     )
     text = models.TextField(verbose_name='текст комментария')
-    created = models.DateTimeField(auto_now_add=True)
 
 
 class Follow(models.Model):
