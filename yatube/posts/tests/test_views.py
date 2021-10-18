@@ -300,11 +300,7 @@ class FollowersTests(TestCase):
 
     def test_user_can_unfollow_authors(self):
         """Пользователь может отписаться от автора."""
-        self.authorized_client.get(
-            reverse(
-                'posts:profile_follow',
-                kwargs={'username': self.user_1.username})
-        )
+        Follow.objects.create(user=self.user_2, author=self.user_1)
         self.assertTrue(
             Follow.objects.filter(
                 user=self.user_2, author=self.user_1).exists()
@@ -323,11 +319,7 @@ class FollowersTests(TestCase):
         """Новая запись пользователя появляется
         в ленте тех, кто на него подписан.
         """
-        self.authorized_client.get(
-            reverse(
-                'posts:profile_follow',
-                kwargs={'username': self.user_1.username})
-        )
+        Follow.objects.create(user=self.user_2, author=self.user_1)
         post = Post.objects.create(
             text='Тестовый пост для проверки подписок',
             author=self.user_1,
