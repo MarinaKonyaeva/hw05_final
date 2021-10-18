@@ -92,7 +92,6 @@ def post_edit(request, post_id):
     )
     if form.is_valid():
         post = form.save()
-        post.author = request.user
         post.save()
         return redirect('posts:post_detail', post_id)
     else:
